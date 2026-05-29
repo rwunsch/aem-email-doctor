@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AEM Email Doctor</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- NAV BAR -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <span class="brand-icon">&#9881;</span>
+      <span class="brand-name">AEM Email Doctor</span>
+      <span class="brand-version">v0.1.0</span>
+    </div>
+    <div class="navbar-tabs">
+      <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="wizard">Wizard</button>
+      <button class="tab-btn" data-tab="logs">Logs</button>
+      <button class="tab-btn" data-tab="config">Config</button>
+    </div>
+    <div class="navbar-status">
+      <span class="ws-indicator" id="wsIndicator" title="WebSocket disconnected">&#9679;</span>
+    </div>
+  </nav>
+
+  <!-- TIER BADGES -->
+  <div class="tier-bar">
+    <span class="tier-badge active" id="tierCore">Core</span>
+    <span class="tier-badge" id="tierCloudManager">Cloud Manager</span>
+    <span class="tier-badge" id="tierAem">AEM</span>
+    <span class="tier-badge" id="tierAzure">Azure</span>
+  </div>
+
+  <!-- ================================================================== -->
+  <!-- TAB: DASHBOARD -->
+  <!-- ================================================================== -->
+  <section class="tab-content active" id="tab-dashboard">
+    <!-- Summary counters -->
+    <div class="summary-row">
+      <div class="summary-card pass">
+        <div class="summary-count" id="countPass">0</div>
+        <div class="summary-label">Pass</div>
+      </div>
+      <div class="summary-card fail">
+        <div class="summary-count" id="countFail">0</div>
+        <div class="summary-label">Fail</div>
+      </div>
+      <div class="summary-card warn">
+        <div class="summary-count" id="countWarn">0</div>
+        <div class="summary-label">Warn</div>
+      </div>
+      <div class="summary-card skip">
+        <div class="summary-count" id="countSkip">0</div>
+        <div class="summary-label">Skip</div>
+      </div>
+    </div>
+
+    <!-- Getting started -->
+    <div class="card" id="gettingStarted">
+      <h3>Getting Started</h3>
+      <p style="margin-bottom:1rem;">No findings yet. Use the <strong>Wizard</strong> to walk through your AEM email / OAuth2 configuration step by step — it will validate your settings, test OAuth2 token exchange, and run SMTP connectivity checks.</p>
+      <button class="btn" onclick="document.querySelector('[data-tab=wizard]').click()">Open Wizard</button>
+    </div>
+
+    <!-- Findings + detail -->
+    <div class="dashboard-grid">
+      <div class="card findings-list" id="findingsList">
+        <h3>Findings</h3>
+        <p class="muted">Run a scan or use the wizard to generate findings.</p>
+      </div>
+      <div class="card finding-detail" id="findingDetail">
+        <h3>Detail</h3>
+        <p class="muted">Select a finding to view details.</p>
+      </div>
+    </div>
+
+    <!-- Token status -->
+    <div class="card" id="tokenStatus" style="display:none;">
+      <h3>Token Status</h3>
+      <div id="tokenInfo"></div>
+    </div>
+  </section>
+
+  <!-- ================================================================== -->
+  <!-- TAB: WIZARD -->
+  <!-- ================================================================== -->
+  <section class="tab-content" id="tab-wizard">
+    <div class="card wizard-card">
+      <h3>Step-by-Step Configuration Wizard</h3>
+      <div class="wizard-steps">
+        <div class="wizard-step-indicator">
+          <span class="step-dot active" data-step="1">1</span>
+          <span class="step-dot" data-step="2">2</span>
+          <span class="step-dot" data-step="3">3</span>
+          <span class="step-dot" data-step="4">4</span>
+          <span class="step-dot" data-step="5">5</span>
+          <span class="step-dot" data-step="6">6</span>
+        </div>
+      </div>
+
+      <!-- Step 1: Azure / Entra ID details -->
+      <div class="wizard-panel active" id="wizStep1">
+        <h4>Step 1: Azure / Entra ID Details</h4>
+        <label>Tenant ID (GUID)
+          <input type="text" id="cfgTenantId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+        </label>
+        <label>Client ID (Application ID)
+          <input type="text" id="cfgClientId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+        </label>
+        <label>Client Secret
+          <div class="secret-field">
+            <input type="password" id="cfgClientSecret" placeholder="Client secret value" />
+            <button type="button" class="btn-eye" onclick="toggleVisibility('cfgClientSecret', this)" title="Show / Hide">
+              <svg class="eye-icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-icon eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+        </label>
+        <label>Scopes (space-separated)
+          <input type="text" id="cfgScopes" value="https://outlook.office.com/SMTP.Send offline_access openid profile email" placeholder="https://outlook.office.com/SMTP.Send offline_access openid profile email" />
+        </label>
+        <label>Redirect URI
+          <input type="text" id="cfgRedirectUri" value="http://localhost:8080" placeholder="http://localhost:8080" />
+          <span class="muted" style="font-size:0.8rem;">Must match the redirect URI registered in Azure Entra app registration</span>
+        </label>
+        <div class="wizard-nav">
+          <span></span>
+          <button class="btn" onclick="wizardNext(2)">Next &rarr;</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Mailbox details -->
+      <div class="wizard-panel" id="wizStep2">
+        <h4>Step 2: Mailbox Configuration</h4>
+        <label>Mailbox (SMTP authenticated user)
+          <input type="email" id="cfgMailbox" placeholder="noreply@example.com" />
+        </label>
+        <label>From Address
+          <input type="email" id="cfgFromAddress" placeholder="noreply@example.com" />
+        </label>
+        <label>SMTP Port (use port 587 for local testing, this needs to be replaced with port 30587 in the AEM CS OSGi config to use the correct Advanced Networking proxy port)
+          <input type="number" id="cfgSmtpPort" value="587" />
+        </label>
+        <label>Test Recipient (optional)
+          <input type="email" id="cfgTestRecipient" placeholder="you@example.com" />
+        </label>
+        <div class="wizard-nav">
+          <button class="btn btn-secondary" onclick="wizardNext(1)">&larr; Back</button>
+          <button class="btn" onclick="wizardNext(3)">Next &rarr;</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Validate config -->
+      <div class="wizard-panel" id="wizStep3">
+        <h4>Step 3: Validate Configuration</h4>
+        <p>Click below to run validation checks on your configuration.</p>
+        <button class="btn" id="btnValidate" onclick="runValidate()">Validate Config</button>
+        <div id="validateResults" class="results-area"></div>
+        <div class="wizard-nav">
+          <button class="btn btn-secondary" onclick="wizardNext(2)">&larr; Back</button>
+          <button class="btn" onclick="wizardNext(4)">Next &rarr;</button>
+        </div>
+      </div>
+
+      <!-- Step 4: OAuth2 flow -->
+      <div class="wizard-panel" id="wizStep4">
+        <h4>Step 4: OAuth2 Authorization</h4>
+
+        <!-- Mode toggle -->
+        <div class="oauth-mode-toggle" style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+          <button class="btn btn-secondary active" id="btnModeAuthCode" onclick="setOAuthMode('authcode')">Full Auth Code Flow</button>
+          <button class="btn btn-secondary" id="btnModeRefresh" onclick="setOAuthMode('refresh')">Use Existing Refresh Token</button>
+        </div>
+
+        <!-- Mode A: Full auth code flow -->
+        <div id="oauthModeAuthCode">
+          <p>Start the OAuth2 flow. You will be given a URL to authorize in your browser, then paste the authorization code below.</p>
+          <button class="btn" id="btnOAuthStart" onclick="startOAuth()">Get Authorization URL</button>
+          <div id="oauthUrlArea" style="display:none;">
+            <p><strong>Open this URL in your browser and authorize:</strong></p>
+            <p class="muted" style="font-size:0.85rem;margin-bottom:0.5rem;">
+              This will take you to the Microsoft Entra login page where you sign in with the mailbox account
+              (or an admin account that can consent on its behalf). After you sign in and grant the requested
+              permissions, Microsoft will redirect your browser to your Redirect URI (e.g. <code>http://localhost:8080</code>).
+              That page may show an error like "This site can't be reached" — <strong>this is expected</strong>.
+            </p>
+            <pre id="oauthUrl" class="code-block"></pre>
+            <label>Paste the authorization code here:
+              <span class="muted" style="font-size:0.85rem;display:block;margin-bottom:0.25rem;">
+                After authorizing, look at the URL bar in your browser. Copy the value of the <code>code=</code> parameter
+                from the redirected URL — it is the long string between <code>code=</code> and the next <code>&amp;</code>.
+                For example: <code>http://localhost:8080?code=<strong>0.AREA...&amp;</strong>state=...</code>
+              </span>
+              <div class="secret-field">
+                <input type="password" id="oauthCode" placeholder="Authorization code" />
+                <button type="button" class="btn-eye" onclick="toggleVisibility('oauthCode', this)" title="Show / Hide">
+                  <svg class="eye-icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg class="eye-icon eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                </button>
+              </div>
+            </label>
+            <button class="btn" onclick="exchangeCode()">Exchange Code for Tokens</button>
+          </div>
+        </div>
+
+        <!-- Mode B: Paste existing refresh token -->
+        <div id="oauthModeRefresh" style="display:none;">
+          <p>Paste an existing refresh token from a previous token generation. This will exchange it for a fresh access token to test SMTP.</p>
+          <label>Refresh Token
+            <div class="secret-field secret-field-textarea">
+              <textarea id="existingRefreshToken" rows="4" placeholder="1.AREAdHSc_x1CV0mN..." style="width:100%;font-family:var(--font-mono);font-size:0.8rem;resize:vertical;" class="obfuscated-textarea"></textarea>
+              <button type="button" class="btn-eye btn-eye-textarea" onclick="toggleTextareaVisibility('existingRefreshToken', this)" title="Show / Hide">
+                <svg class="eye-icon eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="eye-icon eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+          </label>
+          <button class="btn" id="btnRefreshExchange" onclick="useRefreshToken()">Exchange Refresh Token</button>
+        </div>
+
+        <div id="oauthResults" class="results-area"></div>
+        <div class="wizard-nav">
+          <button class="btn btn-secondary" onclick="wizardNext(3)">&larr; Back</button>
+          <button class="btn" onclick="wizardNext(5)">Next &rarr;</button>
+        </div>
+      </div>
+
+      <!-- Step 5: SMTP test -->
+      <div class="wizard-panel" id="wizStep5">
+        <h4>Step 5: SMTP Connectivity Test</h4>
+        <p>Test SMTP connection using the OAuth2 access token obtained in the previous step.</p>
+        <label>
+          <input type="checkbox" id="chkSendTest" /> Send a test email
+        </label>
+        <button class="btn" id="btnSmtpTest" onclick="runSmtpTest()">Test SMTP</button>
+        <div id="smtpResults" class="results-area"></div>
+        <div class="wizard-nav">
+          <button class="btn btn-secondary" onclick="wizardNext(4)">&larr; Back</button>
+          <button class="btn" onclick="wizardNext(6)">Next &rarr;</button>
+        </div>
+      </div>
+
+      <!-- Step 6: Generate configs -->
+      <div class="wizard-panel" id="wizStep6">
+        <h4>Step 6: Generate AEM Configurations</h4>
+        <p>Generate the OSGi configuration files and Cloud Manager environment variables for your AEM instance.</p>
+        <button class="btn" id="btnGenConfig" onclick="generateConfigs()">Generate Configs</button>
+        <div id="configResults" class="results-area"></div>
+        <div class="wizard-nav">
+          <button class="btn btn-secondary" onclick="wizardNext(5)">&larr; Back</button>
+          <span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================== -->
+  <!-- TAB: LOGS -->
+  <!-- ================================================================== -->
+  <section class="tab-content" id="tab-logs">
+    <div class="card">
+      <div class="logs-header">
+        <h3>Transcript / Logs</h3>
+        <button class="btn btn-small" onclick="clearLogs()">Clear</button>
+      </div>
+      <pre class="log-output" id="logOutput">Waiting for activity...</pre>
+    </div>
+  </section>
+
+  <!-- ================================================================== -->
+  <!-- TAB: CONFIG -->
+  <!-- ================================================================== -->
+  <section class="tab-content" id="tab-config">
+    <div class="config-grid">
+      <div class="card">
+        <div class="config-header">
+          <h3>OAuth Provider Config</h3>
+          <button class="btn btn-small" onclick="copyConfig('oauthConfigPre')">Copy</button>
+        </div>
+        <pre class="code-block" id="oauthConfigPre">Generate configs via the Wizard tab to see output here.</pre>
+      </div>
+      <div class="card">
+        <div class="config-header">
+          <h3>Mail Service Config</h3>
+          <button class="btn btn-small" onclick="copyConfig('mailConfigPre')">Copy</button>
+        </div>
+        <pre class="code-block" id="mailConfigPre">Generate configs via the Wizard tab to see output here.</pre>
+      </div>
+      <div class="card">
+        <div class="config-header">
+          <h3>Cloud Manager Variables</h3>
+          <button class="btn btn-small" onclick="copyConfig('cmVarsPre')">Copy</button>
+        </div>
+        <pre class="code-block" id="cmVarsPre">Generate configs via the Wizard tab to see output here.</pre>
+      </div>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>

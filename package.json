@@ -1,0 +1,41 @@
+{
+  "name": "aem-email-doctor",
+  "version": "0.1.0",
+  "description": "Diagnostic tool for AEM as a Cloud Service email configuration with Microsoft 365 OAuth2",
+  "type": "module",
+  "bin": {
+    "aem-email-doctor": "./dist/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsc && node -e \"const fs=require('fs');fs.cpSync('src/web/public','dist/web/public',{recursive:true})\"",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "start": "node dist/cli/index.js",
+    "serve": "node dist/cli/index.js serve"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "aem",
+    "email",
+    "oauth2",
+    "smtp",
+    "diagnostic"
+  ],
+  "license": "Apache-2.0",
+  "dependencies": {
+    "commander": "^14.0.3",
+    "express": "^5.2.1",
+    "open": "^11.0.0",
+    "ws": "^8.20.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.6.0",
+    "@types/ws": "^8.18.1",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.4"
+  }
+}
